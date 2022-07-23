@@ -101,5 +101,41 @@
                 "f8531dc9aa19f6ff"
             ]
         ]
+    },
+    {
+        "id": "43172ed8b326f410",
+        "type": "function",
+        "z": "9464cef46b29375e",
+        "name": "acotarVector",
+        "func": "var vector = global.get('Dinagrama.superficie.Desp_CD',)||-1;\nvector = [1,2,3,,123,41,14,12,5,6,7,8,1,123,4123,5123,1234,1234,1234,1234,1243,1234,1324,1234,1234,1234,1234,2134,1234,4,5,6,7,8,9,10,11,12,31,1.878685, 0.727498, 0.354476, 0.1153, 0, 0, 0.330105, 0.799962, 1.393695, 2.117669, 2.974185, 5.065364, 6.2659, 7.553576, 8.91896, 10.358983, 11.886531, 13.500606, 15.167234, 16.886798, 18.670802, 20.497495, 24.276116, 26.231995, 28.230639, 30.26319, 32.348447, 34.475836, 36.630317, 38.818887, 41.046406, 43.302157, 45.590541, 50.300933, 52.577332, 54.853751, 57.161699, 59.435462, 61.651955, 63.858037, 66.064828, 68.227771, 70.327155, 72.396572, 76.414749, 78.317265, 80.165578, 81.962988, 83.710797, 85.393053, 86.980384, 88.490199, 89.93009, 91.273828, 92.517733, 94.75152, 95.710803, 96.581065, 97.35993, 98.024083, 98.590626, 99.06094, 99.440777, 99.718404, 99.902792, 100, 99.91777, 99.738179, 99.471178, 99.1364, 98.729244, 98.26827, 97.740287, 97.14606, 96.499626, 95.795845, 95.004194, 93.305759, 92.363083, 91.377555, 90.378012, 89.320355, 88.203358, 87.044812, 85.848247, 84.590117, 83.28975, 81.955886, 79.112056, 77.637751, 76.108937, 74.516871, 72.905498, 71.262853, 69.544993, 67.805908, 66.058483, 64.237607, 62.366976, 58.589726, 56.612168, 54.624505, 52.632183, 50.586885, 48.494825, 46.396112, 44.280315, 42.134398, 39.973161, 37.810793, 33.423226, 31.235041, 29.075682, 26.898933, 24.743302, 22.634195, 20.581552, 18.588134, 16.676948, 14.84577, 13.085015, 9.842795, 8.365165, 6.990245, 5.721944, 4.565173, 3.538413, 2.64918]\nvar vAcotado = acotarVector(vector,128);\n\nvar variables = {\n    vector:vector,\n    vAcotado:vAcotado,\n}\ncontext.set('variables',variables,'memoryOnly');\n\nfunction acotarVector(vector,leng){//vector y longitud\n    \n    var datosEliminar = vector.length - leng;\n    var paso = parseInt((vector.length)/datosEliminar);\n    // clonar el vector \n    var vectorInicial  = { ...vector };//queda en objeto\n    // convertir de objeto a vector \n    vectorInicial = Object.values(vectorInicial)\n\n    if (Array.isArray(vectorInicial) && datosEliminar>0){//Si es un vector  y es mayor\n        for (let i = 0; i <= vectorInicial.length; i++) {\n            if(i == 0){//Borrar la posición 1 no la cero\n                vectorInicial.splice((i*paso) + 1, 1);\n            }else{\n                vectorInicial.splice((i*paso), 1);\n            }\n        }\n        // condiciones especiales\n        var diferencia = vectorInicial.length - leng;\n        if(diferencia == 2){//Eliminar dos puntos finales\n            vectorInicial.splice(vectorInicial.length -2 , 1);\n            vectorInicial.splice(vectorInicial.length - 4, 1);\n        }else if(diferencia == 1){//Eliminar solo un punto\n            vectorInicial.splice(vectorInicial.length - 2, 1);\n        }\n        node.status({fill:\"green\",shape:\"ring\",text:\"Acotar\"});\n    }\n    else{\n        // visualizacion del nodo\n        node.status({fill:\"red\",shape:\"ring\",text:\"NoCumpleAcotar\"});\n    }\n    return {vectorInicial,datosEliminar,paso}\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 270,
+        "y": 260,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "3035dc08074ed1e1",
+        "type": "inject",
+        "z": "9464cef46b29375e",
+        "name": "",
+        "props": [],
+        "repeat": "1",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 130,
+        "y": 260,
+        "wires": [
+            [
+                "43172ed8b326f410"
+            ]
+        ]
     }
 ]
