@@ -8,18 +8,25 @@
         "env": []
     },
     {
+        "id": "0f3a5852cb4eadbd",
+        "type": "tab",
+        "label": "DinagramaAlarma",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
         "id": "74b16504a5f145bf",
         "type": "group",
         "z": "9464cef46b29375e",
-        "name": "Adquisión del Dinagrama mapa Modbus",
+        "name": "Seteo de Hora y Mapa Modbus del Dinagrama",
         "style": {
             "label": true
         },
         "nodes": [
             "964378278d11b0bf",
             "c971cc7fb76a02e5",
-            "f8531dc9aa19f6ff",
-            "1493d28a3db431f1"
+            "f8531dc9aa19f6ff"
         ],
         "x": 54,
         "y": 79,
@@ -53,7 +60,7 @@
         "props": [],
         "repeat": "",
         "crontab": "",
-        "once": false,
+        "once": true,
         "onceDelay": 0.1,
         "topic": "",
         "x": 150,
@@ -70,7 +77,7 @@
         "z": "9464cef46b29375e",
         "g": "74b16504a5f145bf",
         "name": "setDinagrama",
-        "func": "// adquision de los dinagramas de superficie\nvar Desp_CD = global.get('Dinagrama.superficie.Desp_CD')||-1;\nvar Esfu_CD = global.get('Dinagrama.superficie.Esfu_CD')||-1;\n\n// adquision del dinagrama de superficie\nadquirirDinagrama('DinagramaSuperficie',Desp_CD,Esfu_CD);\nadquirirDinagrama('DinagramaFondo',[1,2,3,4],[5,6,7,8]);\n\n\n\n// función fifo para la adquisión del dinagrama\nfunction adquirirDinagrama(filename, Desp_CD, Esfu_CD) {\n    // Identificación si existe el file\n    var file = flow.get(filename)||-1;//adquisión del archivo flow\n    if (Array.isArray(file)) {\n        // ya tiene datos guardados\n        node.status({ fill: \"green\", shape: \"ring\", text: \"data\" });\n    } else {\n        var dinagrama = {//Estructura Dinagrama\n            Desp_CD: [],//vector de desplazamiento\n            Esfu_CD: [],//vector de esfuerzo\n            year: 0,//fecha de adquisión\n            moth: 0,\n            day: 0,\n            hour: 0,\n            min: 0,\n        };\n        // definicion de vector para la adquisión\n        var vector = [dinagrama, dinagrama, dinagrama, dinagrama, dinagrama];\n        // guardar variable del dinagrama\n        file = vector;// guardar file para la siguiente condición\n        flow.set(filename,vector);\n        node.status({ fill: \"blue\", shape: \"dot\", text: \"confInit\" });\n    }\n\n    // condición si es vector y tengo datos del dinagrama\n    if (Array.isArray(file) && Array.isArray(Desp_CD) && Array.isArray(Esfu_CD)){\n        var date = new Date();// adquision de la fecha\n        var fecha = {\n            year : date.getFullYear(),\n            moth : date.getMonth() + 1,\n            day  : date.getDate(),\n            hour : date.getHours(),\n            min  : date.getMinutes(),\n\n        }\n        // clonar la estructura del archivo\n        var data = { ... file[0]};\n        // asignación de variables\n        data.Desp_CD = Desp_CD;\n        data.Esfu_CD = Esfu_CD;\n        data.year = fecha.year;\n        data.moth = fecha.moth;\n        data.day = fecha.day;\n        data.hour = fecha.hour;\n        data.min = fecha.min;\n        // condición para el fifo de la función\n        file.unshift(data);//adición en la primera linea\n        file.pop();//Eliminar la última posición\n        // guardar el vector \n        flow.set(filename,file);\n    }else{\n        node.status({fill:\"red\",shape:\"ring\",text:\"NoSeCreo\"});\n    }\n}\nreturn msg;",
+        "func": "// adquision de los dinagramas de superficie\nvar Desp_CD = global.get('Dinagrama.superficie.Desp_CD')||-1;\nvar Esfu_CD = global.get('Dinagrama.superficie.Esfu_CD')||-1;\n\n// adquision del dinagrama de superficie\nfifoDinagrama('DinagramaSuperficie',Desp_CD,Esfu_CD,5);\nfifoDinagrama('DinagramaFondo',[1,2,3,4],[5,6,7,8],5);\n\n// función fifo para la adquisión del dinagrama\nfunction fifoDinagrama(filename, Desp_CD, Esfu_CD,fifoSize = 5) {\n    // Identificación si existe el file\n    var file = flow.get(filename)||-1;//adquisión del archivo flow\n    if (Array.isArray(file)) {\n        // ya tiene datos guardados\n        node.status({ fill: \"green\", shape: \"ring\", text: \"data\" });\n    } else {\n        var dinagrama = {//Estructura Dinagrama\n            Desp_CD: [],//vector de desplazamiento\n            Esfu_CD: [],//vector de esfuerzo\n            year: 0,//fecha de adquisión\n            moth: 0,\n            day: 0,\n            hour: 0,\n            min: 0,\n        };\n        // definicion de vector para la adquisión\n        var vector = []\n        for (let i = 0; i < fifoSize; i++) {\n            vector[i] = dinagrama;   \n        }\n        // guardar variable del dinagrama\n        file = vector;// guardar file para la siguiente condición\n        flow.set(filename,vector);\n        node.status({ fill: \"blue\", shape: \"dot\", text: \"confInit\" });\n    }\n\n    // condición si es vector y tengo datos del dinagrama\n    if (Array.isArray(file) && Array.isArray(Desp_CD) && Array.isArray(Esfu_CD)){\n        var date = new Date();// adquision de la fecha\n        var fecha = {\n            year : date.getFullYear(),\n            moth : date.getMonth() + 1,\n            day  : date.getDate(),\n            hour : date.getHours(),\n            min  : date.getMinutes(),\n\n        }\n        // clonar la estructura del archivo\n        var data = { ... file[0]};\n        // asignación de variables\n        data.Desp_CD = Desp_CD;\n        data.Esfu_CD = Esfu_CD;\n        data.year = fecha.year;\n        data.moth = fecha.moth;\n        data.day = fecha.day;\n        data.hour = fecha.hour;\n        data.min = fecha.min;\n        // condición para el fifo de la función\n        file.unshift(data);//adición en la primera linea\n        file.pop();//Eliminar la última posición\n        // guardar el vector \n        flow.set(filename,file);\n    }else{\n        node.status({fill:\"red\",shape:\"ring\",text:\"NoSeCreo\"});\n    }\n}\nreturn msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
@@ -83,51 +90,48 @@
         ]
     },
     {
-        "id": "1493d28a3db431f1",
-        "type": "inject",
-        "z": "9464cef46b29375e",
-        "g": "74b16504a5f145bf",
-        "name": "",
-        "props": [],
-        "repeat": "60",
-        "crontab": "",
-        "once": true,
-        "onceDelay": 0.1,
-        "topic": "",
-        "x": 150,
-        "y": 180,
-        "wires": [
-            [
-                "f8531dc9aa19f6ff"
-            ]
-        ]
-    },
-    {
         "id": "43172ed8b326f410",
         "type": "function",
         "z": "9464cef46b29375e",
         "name": "acotarVector",
-        "func": "var vector = global.get('Dinagrama.superficie.Desp_CD',)||-1;\nvector = [1,2,3,,123,41,14,12,5,6,7,8,1,123,4123,5123,1234,1234,1234,1234,1243,1234,1324,1234,1234,1234,1234,2134,1234,4,5,6,7,8,9,10,11,12,31,1.878685, 0.727498, 0.354476, 0.1153, 0, 0, 0.330105, 0.799962, 1.393695, 2.117669, 2.974185, 5.065364, 6.2659, 7.553576, 8.91896, 10.358983, 11.886531, 13.500606, 15.167234, 16.886798, 18.670802, 20.497495, 24.276116, 26.231995, 28.230639, 30.26319, 32.348447, 34.475836, 36.630317, 38.818887, 41.046406, 43.302157, 45.590541, 50.300933, 52.577332, 54.853751, 57.161699, 59.435462, 61.651955, 63.858037, 66.064828, 68.227771, 70.327155, 72.396572, 76.414749, 78.317265, 80.165578, 81.962988, 83.710797, 85.393053, 86.980384, 88.490199, 89.93009, 91.273828, 92.517733, 94.75152, 95.710803, 96.581065, 97.35993, 98.024083, 98.590626, 99.06094, 99.440777, 99.718404, 99.902792, 100, 99.91777, 99.738179, 99.471178, 99.1364, 98.729244, 98.26827, 97.740287, 97.14606, 96.499626, 95.795845, 95.004194, 93.305759, 92.363083, 91.377555, 90.378012, 89.320355, 88.203358, 87.044812, 85.848247, 84.590117, 83.28975, 81.955886, 79.112056, 77.637751, 76.108937, 74.516871, 72.905498, 71.262853, 69.544993, 67.805908, 66.058483, 64.237607, 62.366976, 58.589726, 56.612168, 54.624505, 52.632183, 50.586885, 48.494825, 46.396112, 44.280315, 42.134398, 39.973161, 37.810793, 33.423226, 31.235041, 29.075682, 26.898933, 24.743302, 22.634195, 20.581552, 18.588134, 16.676948, 14.84577, 13.085015, 9.842795, 8.365165, 6.990245, 5.721944, 4.565173, 3.538413, 2.64918]\nvar vAcotado = acotarVector(vector,128);\n\nvar variables = {\n    vector:vector,\n    vAcotado:vAcotado,\n}\ncontext.set('variables',variables,'memoryOnly');\n\nfunction acotarVector(vector,leng){//vector y longitud\n    \n    var datosEliminar = vector.length - leng;\n    var paso = parseInt((vector.length)/datosEliminar);\n    // clonar el vector \n    var vectorInicial  = { ...vector };//queda en objeto\n    // convertir de objeto a vector \n    vectorInicial = Object.values(vectorInicial)\n\n    if (Array.isArray(vectorInicial) && datosEliminar>0){//Si es un vector  y es mayor\n        for (let i = 0; i <= vectorInicial.length; i++) {\n            if(i == 0){//Borrar la posición 1 no la cero\n                vectorInicial.splice((i*paso) + 1, 1);\n            }else{\n                vectorInicial.splice((i*paso), 1);\n            }\n        }\n        // condiciones especiales\n        var diferencia = vectorInicial.length - leng;\n        if(diferencia == 2){//Eliminar dos puntos finales\n            vectorInicial.splice(vectorInicial.length -2 , 1);\n            vectorInicial.splice(vectorInicial.length - 4, 1);\n        }else if(diferencia == 1){//Eliminar solo un punto\n            vectorInicial.splice(vectorInicial.length - 2, 1);\n        }\n        node.status({fill:\"green\",shape:\"ring\",text:\"Acotar\"});\n    }\n    else{\n        // visualizacion del nodo\n        node.status({fill:\"red\",shape:\"ring\",text:\"NoCumpleAcotar\"});\n    }\n    return {vectorInicial,datosEliminar,paso}\n}\nreturn msg;",
+        "func": "var vector = global.get('Dinagrama.superficie.Desp_CD',)||-1;\nvar Esfu_CD = global.get('Dinagrama.superficie.Esfu_CD',)||-1;\nvar vAcotado = acotarVector(vector,128);\nvar testing=[],testing2 = []\nfor (let i = 80; i < 126; i++) {\n    testing[i -80] = acotarVector(vector,i) \n    testing2[i - 80] = acotarVector(Esfu_CD,i)\n}\nvar vAcotado = acotarVector(vector,128);\n\nvar variables = {\n    vector:vector,\n    vAcotado:vAcotado,\n    testing:testing,\n    testing2:testing2,\n}\ncontext.set('variables',variables,'memoryOnly');\n\nreturn msg;\n\nfunction acotarVector(vector,leng){//vector y longitud    \n    if (vector.length == leng) {// retornar si cumple la longitud\n        return vector;\n    }else{\n        var datosEliminar = vector.length - leng;\n        var paso = parseInt((vector.length)/datosEliminar);\n        // clonar el vector \n        var vectorInicial  = { ...vector };//queda en objeto\n        // convertir de objeto a vector \n        vectorInicial = Object.values(vectorInicial)\n\n        if (Array.isArray(vectorInicial) && datosEliminar>0){//Si es un vector  y es mayor\n            for (let i = 0; i <= vectorInicial.length; i++) {\n                if(i == 0){//Borrar la posición 1 no la cero\n                    vectorInicial.splice((i*paso) + 1, 1);\n                }else{\n                    vectorInicial.splice((i*paso), 1);\n                }\n            }\n            // condiciones especiales si queda con más valores\n            var diferencia = vectorInicial.length - leng;\n            for (let i = 0; i < diferencia; i++){\n                vectorInicial.splice(getRandomArbitrary (3, vectorInicial.length -3) , 1);\n            }\n            node.status({fill:\"green\",shape:\"ring\",text:\"Acotar\"});\n        }\n        else{//No es un vector\n            // visualizacion del nodo\n            node.status({fill:\"red\",shape:\"ring\",text:\"NoCumpleAcotar\"});\n            vectorInicial = []\n        }\n        return vectorInicial\n    }\n\n}\nfunction getRandomArbitrary(min, max) {\n    return parseInt(Math.random() * (max - min) + min);\n}\n",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 290,
+        "x": 310,
         "y": 320,
         "wires": [
             []
         ]
     },
     {
-        "id": "3035dc08074ed1e1",
+        "id": "5de36ce57682bbe7",
+        "type": "function",
+        "z": "9464cef46b29375e",
+        "name": "Valores Random",
+        "func": "var value = getRandomArbitrary(2,15);\nnode.status({fill:\"green\",shape:\"ring\",text:\"Value: \" + value});\nreturn msg;\n// genera valores enteros arbitrarios\nfunction getRandomArbitrary(min, max) {\n    return parseInt(Math.random() * (max - min) + min);\n}\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 320,
+        "y": 380,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "2bd5a9a3e0d8ac67",
         "type": "inject",
         "z": "9464cef46b29375e",
         "name": "",
         "props": [],
-        "repeat": "1",
+        "repeat": "",
         "crontab": "",
-        "once": false,
+        "once": true,
         "onceDelay": 0.1,
         "topic": "",
         "x": 150,
@@ -136,6 +140,141 @@
             [
                 "43172ed8b326f410"
             ]
+        ]
+    },
+    {
+        "id": "23522e324f846be2",
+        "type": "function",
+        "z": "0f3a5852cb4eadbd",
+        "name": "DinagramaModbus",
+        "func": "// adquision de los dinagramas de superficie\nvar Desp_CD = global.get('Dinagrama.superficie.Desp_CD') || -1;\nvar Esfu_CD = global.get('Dinagrama.superficie.Esfu_CD') || -1;\nvar alarma = global.get('Alarma')||false;\n// flag utilizadas para la ejecución de la acción de un solo evento\nvar flags = context.get('flags','memoryOnly')||{alarma:false,falla:false};\n\nif(alarma && !flags.alarma){//registrar dinagrama\n    estructuraDinagrama(Desp_CD, Esfu_CD, 80, alarma, 'Dinagrama.Alarma.superficie');\n    estructuraDinagrama(Desp_CD, Esfu_CD, 80, alarma, 'Dinagrama.Alarma.fondo');\n    flags.alarma = true;\n}else if(!alarma){//setear flag para guardar \n    flags.alarma = false;\n}\nestructuraDinagrama(Desp_CD, Esfu_CD, 80, false, 'Dinagrama.Falla.superficie');\n\n\n// monitoreo\nvar variables = {\n    vector:{Desp_CD,Esfu_CD},\n    alarma:alarma\n}\ncontext.set('variables',variables,'memoryOnly');\ncontext.set('flags', flags,'memoryOnly');\n\nfunction estructuraDinagrama(Desp_CD, Esfu_CD, tamano = 80, evento, filename) {\n    var file = flow.get(filename) || -1;\n    var date = new Date();// adquision de la fecha\n    if (file == -1) {//creación del archivo file \n        // creación de la estructura de fecha\n        var dinagrama = {//Estructura Dinagrama\n            Desp_CD: acotarVector([], tamano), //vector de desplazamiento\n            Esfu_CD: acotarVector([], tamano),   //vector de esfuerzo\n            year: date.getFullYear(),//fecha de adquisión\n            moth: date.getMonth() + 1,\n            day: date.getDate(),\n            hour: date.getHours(),\n            min: date.getMinutes(),\n        };\n        flow.set(filename, dinagrama)\n        // guardando evento anterior\n    }\n    if (evento){//condición de Flag\n        // creación de la estructura de fecha\n        var estructura = {//Estructura Dinagrama\n            Desp_CD: acotarVector(Desp_CD, tamano), //vector de desplazamiento\n            Esfu_CD: acotarVector(Esfu_CD, tamano),   //vector de esfuerzo\n            year: date.getFullYear(),//fecha de adquisión\n            moth: date.getMonth() + 1,\n            day: date.getDate(),\n            hour: date.getHours(),\n            min: date.getMinutes(),\n        };\n        flow.set(filename, estructura)\n    }\n    return dinagrama\n}\n\nfunction acotarVector(vector, leng) {//vector y longitud    \n    if (vector.length == leng) {// retornar si cumple la longitud\n        return vector;\n    } else {\n        var datosEliminar = vector.length - leng;\n        var paso = parseInt((vector.length) / datosEliminar);\n        // clonar el vector \n        var vectorInicial = { ...vector };//queda en objeto\n        // convertir de objeto a vector \n        vectorInicial = Object.values(vectorInicial)\n\n        if (Array.isArray(vectorInicial) && datosEliminar > 0) {//Si es un vector  y es mayor\n            for (let i = 0; i <= vectorInicial.length; i++) {\n                if (i == 0) {//Borrar la posición 1 no la cero\n                    vectorInicial.splice((i * paso) + 1, 1);\n                } else {//Borrar el procedimiento de Pasos\n                    vectorInicial.splice((i * paso), 1);\n                }\n            }\n            // condiciones especiales si queda con más valores\n            var diferencia = vectorInicial.length - leng;\n            for (let i = 0; i < diferencia; i++) {\n                vectorInicial.splice(getRandomArbitrary(3, vectorInicial.length - 3), 1);\n            }\n            \n        }\n        else if (Array.isArray(vectorInicial) == false) {//No es un vector\n            vectorInicial = [];\n            node.status({fill:\"red\",shape:\"ring\",text:\"NoVector\"});\n        }\n        return vectorInicial\n    }\n\n}\nfunction getRandomArbitrary(min, max) {//Funcion para generar numero random\n    return parseInt(Math.random() * (max - min) + min);\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 350,
+        "y": 80,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "df41312f42c5e370",
+        "type": "inject",
+        "z": "0f3a5852cb4eadbd",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "true",
+        "payloadType": "bool",
+        "x": 170,
+        "y": 260,
+        "wires": [
+            [
+                "8e6d0001a6b24498"
+            ]
+        ]
+    },
+    {
+        "id": "8e6d0001a6b24498",
+        "type": "change",
+        "z": "0f3a5852cb4eadbd",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "Alarma",
+                "pt": "global",
+                "to": "payload",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 350,
+        "y": 280,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "14b7c3c7b9fb86f9",
+        "type": "inject",
+        "z": "0f3a5852cb4eadbd",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "false",
+        "payloadType": "bool",
+        "x": 170,
+        "y": 320,
+        "wires": [
+            [
+                "8e6d0001a6b24498"
+            ]
+        ]
+    },
+    {
+        "id": "9f5712749cf09d1a",
+        "type": "inject",
+        "z": "0f3a5852cb4eadbd",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "1",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "true",
+        "payloadType": "bool",
+        "x": 170,
+        "y": 80,
+        "wires": [
+            [
+                "23522e324f846be2"
+            ]
+        ]
+    },
+    {
+        "id": "c75cec864f48214b",
+        "type": "rbe",
+        "z": "0f3a5852cb4eadbd",
+        "name": "",
+        "func": "rbe",
+        "gap": "",
+        "start": "",
+        "inout": "out",
+        "septopics": true,
+        "property": "payload",
+        "topi": "topic",
+        "x": 310,
+        "y": 180,
+        "wires": [
+            []
         ]
     }
 ]
